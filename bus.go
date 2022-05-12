@@ -1,6 +1,8 @@
 package crowd
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/vmware/transport-go/bridge"
@@ -12,7 +14,7 @@ import (
 type Bus struct {
 	hcl           hcl.Logger
 	bus           bus.EventBus
-	hasFabric     bool
+	fabricAdr     string
 	connectBroker bridge.Connection
 	msgHandlers   map[string]messageHandler
 }
@@ -22,7 +24,6 @@ func New(opts ...Option) (evtBus *Bus, close func()) {
 	e := &Bus{
 		hcl:         hcl.New(),
 		bus:         bus.GetBus(),
-		hasFabric:   false,
 		msgHandlers: make(map[string]messageHandler),
 	}
 	for _, o := range opts {
@@ -36,7 +37,7 @@ func New(opts ...Option) (evtBus *Bus, close func()) {
 		if e.connectBroker != nil {
 			e.connectBroker.Disconnect()
 		}
-		if e.hasFabric {
+		if len(e.fabricAdr) > 0 {
 			e.bus.StopFabricEndpoint()
 		}
 	}
@@ -44,7 +45,7 @@ func New(opts ...Option) (evtBus *Bus, close func()) {
 
 func (e *Bus) AddMessageHandler(h messageHandler) error {
 	h.init(e.hcl)
-	if e.hasFabric {
+	if len(e.fabricAdr) > 0 {
 		if err := h.markGalatic(e.getConnectBroker()); err != nil {
 			e.hcl.Errorf(err.Error())
 			return err
@@ -61,12 +62,15 @@ func (e Bus) WaitMsgProcessed() {
 }
 
 func (e Bus) getConnectBroker() bridge.Connection {
-
+	adr := e.fabricAdr
+	if strings.HasPrefix(adr, ":") {
+		adr = fmt.Sprintf("localhost%s", adr)
+	}
 	if e.connectBroker == nil {
 		config := &bridge.BrokerConnectorConfig{
 			Username:   "guest",
 			Password:   "guest",
-			ServerAddr: "localhost:4444",
+			ServerAddr: adr,
 			WebSocketConfig: &bridge.WebSocketConfig{
 				WSPath: "/ws",
 				UseTLS: false,

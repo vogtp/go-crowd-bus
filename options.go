@@ -19,7 +19,7 @@ func Hcl(hcl hcl.Logger) Option {
 // FabricEndpoint is an Option to start a fabric endpoint as goroutine
 func FabricEndpoint(adr string) Option {
 	return func(e *Bus) {
-		e.hasFabric = true
+		e.fabricAdr = adr
 		stompListener, err := stompserver.NewWebSocketConnectionListener(adr, "/ws", nil)
 		if err != nil {
 			e.hcl.Errorf("Cannot start stomp listener: %v", err)
@@ -35,7 +35,7 @@ func FabricEndpoint(adr string) Option {
 				Heartbeat:             60000,
 			})
 			if err != nil {
-				e.hasFabric = false
+				e.fabricAdr = ""
 				e.hcl.Errorf("Cannot start endpoint: %v", err)
 			}
 		}()

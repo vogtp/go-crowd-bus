@@ -1,6 +1,7 @@
 package crowd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -82,13 +83,13 @@ func (h *MessageHandler[M]) Send(evt *M) (err error) {
 		return fmt.Errorf("could not send local message: %w", err)
 	}
 	// the following code panics in transport-go/bridge/bridge_client.go:188
-	// payload, err := json.Marshal(evt)
-	// if err != nil {
-	// 	return fmt.Errorf("could not marshal message: %w", err)
-	// }
-	// if err := h.bridge.SendJSONMessage(h.brokerDestination, payload); err != nil {
-	// 	return fmt.Errorf("could not send global message: %w", err)
-	// }
+	payload, err := json.Marshal(evt)
+	if err != nil {
+		return fmt.Errorf("could not marshal message: %w", err)
+	}
+	if err := h.bridge.SendJSONMessage(h.brokerDestination, payload); err != nil {
+		return fmt.Errorf("could not send global message: %w", err)
+	}
 	return nil
 }
 
