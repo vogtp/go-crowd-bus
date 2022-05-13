@@ -9,7 +9,7 @@ import (
 // Option configures the Engine
 type Option func(*Bus)
 
-// FabricEndpoint is an Option to start a fabric endpoint as goroutine
+// Hcl is an Option to add a hcl logger
 func Hcl(hcl hcl.Logger) Option {
 	return func(e *Bus) {
 		e.hcl = hcl

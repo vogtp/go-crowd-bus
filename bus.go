@@ -43,7 +43,7 @@ func New(opts ...Option) (evtBus *Bus, close func()) {
 	}
 }
 
-func (e *Bus) AddMessageHandler(h messageHandler) error {
+func (e *Bus) addMessageHandler(h messageHandler) error {
 	h.init(e.hcl)
 	if len(e.fabricAdr) > 0 {
 		if err := h.markGalatic(e.getConnectBroker()); err != nil {
@@ -55,18 +55,20 @@ func (e *Bus) AddMessageHandler(h messageHandler) error {
 	return nil
 }
 
-func (e Bus) WaitMsgProcessed() {
+// WaitMsgProcessed wait for all messages processed
+func (e *Bus) WaitMsgProcessed() {
 	for _, h := range e.msgHandlers {
 		h.WaitMsgProcessed()
 	}
 }
 
-func (e Bus) getConnectBroker() bridge.Connection {
+func (e *Bus) getConnectBroker() bridge.Connection {
 	adr := e.fabricAdr
 	if strings.HasPrefix(adr, ":") {
 		adr = fmt.Sprintf("localhost%s", adr)
 	}
 	if e.connectBroker == nil {
+		e.hcl.Infof("creating a broker: %s", adr)
 		config := &bridge.BrokerConnectorConfig{
 			Username:   "guest",
 			Password:   "guest",

@@ -53,10 +53,8 @@ func getBus(hcl hcl.Logger) *EvtAlrtBus {
 	)
 	defer close()
 	b.bus = bus
-	b.Event = crowd.NewMessageHandler[EvtMsg]("event")
-	b.Alert = crowd.NewMessageHandler[AlertMsg]("alert")
-	b.bus.AddMessageHandler(b.Event)
-	b.bus.AddMessageHandler(b.Alert)
+	b.Event = crowd.NewMessageHandler[EvtMsg](bus, "event")
+	b.Alert = crowd.NewMessageHandler[AlertMsg](bus, "alert")
 	return b
 }
 
